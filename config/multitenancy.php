@@ -21,6 +21,9 @@ return [
      *
      * IMPORTANT: Changed to CompanyTenantFinder to resolve by Company subdomain
      */
+    'tenant_db_prefix' => env('TENANT_DB_PREFIX', ''),
+
+
     'tenant_finder' => CompanyTenantFinder::class,
 
     /*

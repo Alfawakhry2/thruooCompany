@@ -40,7 +40,7 @@ class ProductController extends Controller
             'categories:id,name,name_ar',
             'tax',
             'currency',
-            'branch:id,name,name_ar,code' // Load default branch
+            'branch:id,name,name_ar' // Load default branch
         ])->forBranch($branchId)->where('module_id', $moduleId);
 
         // Search
@@ -89,175 +89,298 @@ class ProductController extends Controller
     /**
      * Create product
      */
+    // public function store($companySlug, $moduleId, $branchId, Request $request): JsonResponse
+    // {
+    //     // Verify module
+    //     $module = Module::find($moduleId);
+    //     if (!$module) {
+    //         return response()->json(['success' => false, 'message' => 'Module not found'], 404);
+    //     }
+
+    //     $validator = Validator::make($request->all(), [
+    //         'title' => ['required', 'string', 'max:255'],
+    //         'title_ar' => ['required', 'string', 'max:255'],
+    //         'description' => ['nullable', 'string'],
+    //         'description_ar' => ['nullable', 'string'],
+    //         'sku' => ['nullable', 'string', 'max:100', 'unique:products,sku'],
+    //         'barcode' => ['nullable', 'string', 'max:100'],
+    //         'base_price' => ['required', 'numeric', 'min:0'],
+    //         'discount_price' => ['nullable', 'numeric', 'min:0', 'lt:base_price'],
+    //         'cost_price' => ['nullable', 'numeric', 'min:0'],
+    //         'base_stock' => ['nullable', 'integer', 'min:0'],
+    //         'min_stock' => ['nullable', 'integer', 'min:0'],
+    //         'tax_id' => ['nullable', 'exists:taxes,id'],
+    //         'currency_id' => ['nullable', 'exists:currencies,id'],
+    //         'track_by_branch' => ['nullable', 'boolean'],
+    //         'image' => ['nullable', 'image', 'max:2048'],
+    //         'images.*' => ['nullable', 'image', 'max:2048'],
+    //         'status' => ['nullable', 'boolean'],
+    //         'is_featured' => ['nullable', 'boolean'],
+    //         'track_stock' => ['nullable', 'boolean'],
+    //         'category_ids' => ['required', 'array', 'min:1'],
+    //         'category_ids.*' => ['exists:categories,id'],
+    //         'vendor_ids' => ['nullable', 'array'],
+    //         'vendor_ids.*' => ['exists:vendors,id'],
+
+    //         // Branch stock management
+    //         'branch_stocks' => ['nullable', 'array'],
+    //         'branch_stocks.*.branch_id' => ['required', 'exists:branches,id'],
+    //         'branch_stocks.*.stock' => ['required', 'integer', 'min:0'],
+    //         'branch_stocks.*.min_stock' => ['nullable', 'integer', 'min:0'],
+    //         'branch_stocks.*.price' => ['nullable', 'numeric', 'min:0'],
+    //         'branch_stocks.*.is_active' => ['nullable', 'boolean'],
+
+    //         // Variants
+    //         'variants' => ['nullable', 'array'],
+    //         'variants.*.name' => ['nullable', 'string'],
+    //         'variants.*.name_ar' => ['nullable', 'string'],
+    //         'variants.*.sku' => ['nullable', 'string', 'unique:product_variants,sku'],
+    //         'variants.*.price' => ['required', 'numeric', 'min:0'],
+    //         'variants.*.cost_price' => ['nullable', 'numeric', 'min:0'],
+    //         'variants.*.stock' => ['nullable', 'integer', 'min:0'],
+    //         'variants.*.image' => ['nullable', 'image', 'max:2048'],
+    //         'variants.*.status' => ['nullable', 'boolean'],
+    //         'variants.*.attribute_value_ids' => ['nullable', 'array'],
+    //         'variants.*.attribute_value_ids.*' => ['exists:attribute_values,id'],
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'errors' => $validator->errors(),
+    //         ], 422);
+    //     }
+
+    //     DB::beginTransaction();
+    //     try {
+    //         $data = $validator->validated();
+
+    //         // Generate SKU if not provided
+    //         if (empty($data['sku'])) {
+    //             $data['sku'] = 'PRD-' . strtoupper(Str::random(8));
+    //         }
+
+    //         // Generate slug
+    //         $data['slug'] = Str::slug($data['title']) . '-' . time();
+
+    //         $data['module_id'] = $moduleId;
+    //         $data['branch_id'] = $branchId;
+    //         $data['created_by'] = Auth::id();
+
+    //         // Handle main image
+    //         if ($request->hasFile('image')) {
+    //             $data['image'] = $request->file('image')->store('products', 'public');
+    //         }
+
+    //         // Handle additional images
+    //         if ($request->hasFile('images')) {
+    //             $images = [];
+    //             foreach ($request->file('images') as $image) {
+    //                 $images[] = $image->store('products', 'public');
+    //             }
+    //             $data['images'] = $images;
+    //         }
+
+    //         // Extract related data
+    //         $categoryIds = $data['category_ids'] ?? [];
+    //         $vendorIds = $data['vendor_ids'] ?? [];
+    //         $variantsData = $data['variants'] ?? [];
+    //         $branchStocks = $data['branch_stocks'] ?? [];
+
+    //         unset($data['category_ids'], $data['vendor_ids'], $data['variants'], $data['branch_stocks']);
+
+    //         // Create product
+    //         $product = Product::create($data);
+
+    //         // Attach categories
+    //         $product->categories()->sync($categoryIds);
+
+    //         // Attach vendors
+    //         if (!empty($vendorIds)) {
+    //             $product->vendors()->sync($vendorIds);
+    //         }
+
+    //         // Handle branch-specific stock (if track_by_branch is enabled)
+    //         if (!empty($branchStocks) && ($data['track_by_branch'] ?? false)) {
+    //             foreach ($branchStocks as $branchStock) {
+    //                 $product->branches()->attach($branchStock['branch_id'], [
+    //                     'stock' => $branchStock['stock'] ?? 0,
+    //                     'reserved' => 0,
+    //                     'min_stock' => $branchStock['min_stock'] ?? 0,
+    //                     'price' => $branchStock['price'] ?? null,
+    //                     'is_active' => $branchStock['is_active'] ?? true,
+    //                 ]);
+    //             }
+    //         }
+
+    //         // Create variants
+    //         foreach ($variantsData as $variantData) {
+    //             $attributeValueIds = $variantData['attribute_value_ids'] ?? [];
+    //             unset($variantData['attribute_value_ids']);
+
+    //             // Handle variant image
+    //             if (isset($variantData['image']) && $variantData['image'] instanceof \Illuminate\Http\UploadedFile) {
+    //                 $variantData['image'] = $variantData['image']->store('variants', 'public');
+    //             }
+
+    //             $variant = $product->variants()->create($variantData);
+
+    //             // Attach attribute values
+    //             if (!empty($attributeValueIds)) {
+    //                 $variant->attributeValues()->sync($attributeValueIds);
+    //             }
+    //         }
+
+    //         // Update last restocked timestamp and lifetime stock
+    //         if (isset($data['base_stock']) && $data['base_stock'] > 0) {
+    //             $product->updateLastRestocked();
+    //             $product->addToLifetimeStock($data['base_stock']);
+    //         }
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Product created successfully',
+    //             'data' => $product->load([
+    //                 'categories',
+    //                 'vendors',
+    //                 'branch',
+    //                 'branches',
+    //                 'variants.attributeValues'
+    //             ]),
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to create product: ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
     public function store($companySlug, $moduleId, $branchId, Request $request): JsonResponse
-    {
-        // Verify module
-        $module = Module::find($moduleId);
-        if (!$module) {
-            return response()->json(['success' => false, 'message' => 'Module not found'], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'title' => ['required', 'string', 'max:255'],
-            'title_ar' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'description_ar' => ['nullable', 'string'],
-            'sku' => ['nullable', 'string', 'max:100', 'unique:products,sku'],
-            'barcode' => ['nullable', 'string', 'max:100'],
-            'base_price' => ['required', 'numeric', 'min:0'],
-            'discount_price' => ['nullable', 'numeric', 'min:0', 'lt:base_price'],
-            'cost_price' => ['nullable', 'numeric', 'min:0'],
-            'base_stock' => ['nullable', 'integer', 'min:0'],
-            'min_stock' => ['nullable', 'integer', 'min:0'],
-            'tax_id' => ['nullable', 'exists:taxes,id'],
-            'currency_id' => ['nullable', 'exists:currencies,id'],
-            'track_by_branch' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', 'max:2048'],
-            'images.*' => ['nullable', 'image', 'max:2048'],
-            'status' => ['nullable', 'boolean'],
-            'is_featured' => ['nullable', 'boolean'],
-            'track_stock' => ['nullable', 'boolean'],
-            'category_ids' => ['required', 'array', 'min:1'],
-            'category_ids.*' => ['exists:categories,id'],
-            'vendor_ids' => ['nullable', 'array'],
-            'vendor_ids.*' => ['exists:vendors,id'],
-
-            // Branch stock management
-            'branch_stocks' => ['nullable', 'array'],
-            'branch_stocks.*.branch_id' => ['required', 'exists:branches,id'],
-            'branch_stocks.*.stock' => ['required', 'integer', 'min:0'],
-            'branch_stocks.*.min_stock' => ['nullable', 'integer', 'min:0'],
-            'branch_stocks.*.price' => ['nullable', 'numeric', 'min:0'],
-            'branch_stocks.*.is_active' => ['nullable', 'boolean'],
-
-            // Variants
-            'variants' => ['nullable', 'array'],
-            'variants.*.name' => ['nullable', 'string'],
-            'variants.*.name_ar' => ['nullable', 'string'],
-            'variants.*.sku' => ['nullable', 'string', 'unique:product_variants,sku'],
-            'variants.*.price' => ['required', 'numeric', 'min:0'],
-            'variants.*.cost_price' => ['nullable', 'numeric', 'min:0'],
-            'variants.*.stock' => ['nullable', 'integer', 'min:0'],
-            'variants.*.image' => ['nullable', 'image', 'max:2048'],
-            'variants.*.status' => ['nullable', 'boolean'],
-            'variants.*.attribute_value_ids' => ['nullable', 'array'],
-            'variants.*.attribute_value_ids.*' => ['exists:attribute_values,id'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        DB::beginTransaction();
-        try {
-            $data = $validator->validated();
-
-            // Generate SKU if not provided
-            if (empty($data['sku'])) {
-                $data['sku'] = 'PRD-' . strtoupper(Str::random(8));
-            }
-
-            // Generate slug
-            $data['slug'] = Str::slug($data['title']) . '-' . time();
-
-            $data['module_id'] = $moduleId;
-            $data['branch_id'] = $branchId;
-            $data['created_by'] = Auth::id();
-
-            // Handle main image
-            if ($request->hasFile('image')) {
-                $data['image'] = $request->file('image')->store('products', 'public');
-            }
-
-            // Handle additional images
-            if ($request->hasFile('images')) {
-                $images = [];
-                foreach ($request->file('images') as $image) {
-                    $images[] = $image->store('products', 'public');
-                }
-                $data['images'] = $images;
-            }
-
-            // Extract related data
-            $categoryIds = $data['category_ids'] ?? [];
-            $vendorIds = $data['vendor_ids'] ?? [];
-            $variantsData = $data['variants'] ?? [];
-            $branchStocks = $data['branch_stocks'] ?? [];
-
-            unset($data['category_ids'], $data['vendor_ids'], $data['variants'], $data['branch_stocks']);
-
-            // Create product
-            $product = Product::create($data);
-
-            // Attach categories
-            $product->categories()->sync($categoryIds);
-
-            // Attach vendors
-            if (!empty($vendorIds)) {
-                $product->vendors()->sync($vendorIds);
-            }
-
-            // Handle branch-specific stock (if track_by_branch is enabled)
-            if (!empty($branchStocks) && ($data['track_by_branch'] ?? false)) {
-                foreach ($branchStocks as $branchStock) {
-                    $product->branches()->attach($branchStock['branch_id'], [
-                        'stock' => $branchStock['stock'] ?? 0,
-                        'reserved' => 0,
-                        'min_stock' => $branchStock['min_stock'] ?? 0,
-                        'price' => $branchStock['price'] ?? null,
-                        'is_active' => $branchStock['is_active'] ?? true,
-                    ]);
-                }
-            }
-
-            // Create variants
-            foreach ($variantsData as $variantData) {
-                $attributeValueIds = $variantData['attribute_value_ids'] ?? [];
-                unset($variantData['attribute_value_ids']);
-
-                // Handle variant image
-                if (isset($variantData['image']) && $variantData['image'] instanceof \Illuminate\Http\UploadedFile) {
-                    $variantData['image'] = $variantData['image']->store('variants', 'public');
-                }
-
-                $variant = $product->variants()->create($variantData);
-
-                // Attach attribute values
-                if (!empty($attributeValueIds)) {
-                    $variant->attributeValues()->sync($attributeValueIds);
-                }
-            }
-
-            // Update last restocked timestamp and lifetime stock
-            if (isset($data['base_stock']) && $data['base_stock'] > 0) {
-                $product->updateLastRestocked();
-                $product->addToLifetimeStock($data['base_stock']);
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Product created successfully',
-                'data' => $product->load([
-                    'categories',
-                    'vendors',
-                    'branch',
-                    'branches',
-                    'variants.attributeValues'
-                ]),
-            ], 201);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create product: ' . $e->getMessage(),
-            ], 500);
-        }
+{
+    // Verify module
+    $module = Module::find($moduleId);
+    if (!$module) {
+        return response()->json(['success' => false, 'message' => 'Module not found'], 404);
     }
+
+    $validator = Validator::make($request->all(), [
+        'title' => ['required', 'string', 'max:255'],
+        'title_ar' => ['required', 'string', 'max:255'],
+        'description' => ['nullable', 'string'],
+        'description_ar' => ['nullable', 'string'],
+        'sku' => ['nullable', 'string', 'max:100', 'unique:products,sku'],
+        'barcode' => ['nullable', 'string', 'max:100'],
+        'base_price' => ['required', 'numeric', 'min:0'],
+        'discount_price' => ['nullable', 'numeric', 'min:0', 'lt:base_price'],
+        'cost_price' => ['nullable', 'numeric', 'min:0'],
+        'base_stock' => ['nullable', 'integer', 'min:0'],
+        'min_stock' => ['nullable', 'integer', 'min:0'],
+        'tax_id' => ['nullable', 'exists:taxes,id'],
+        'currency_id' => ['nullable', 'exists:currencies,id'],
+        'track_by_branch' => ['nullable', 'boolean'],
+        'status' => ['nullable', 'boolean'],
+        'is_featured' => ['nullable', 'boolean'],
+        'track_stock' => ['nullable', 'boolean'],
+
+        'category_ids' => ['required', 'array', 'min:1'],
+        'category_ids.*' => ['exists:categories,id'],
+
+        'vendor_ids' => ['nullable', 'array'],
+        'vendor_ids.*' => ['exists:vendors,id'],
+
+        // Variants
+        'variants' => ['nullable', 'array'],
+        'variants.*.name' => ['nullable', 'string'],
+        'variants.*.name_ar' => ['nullable', 'string'],
+        'variants.*.sku' => ['nullable', 'string', 'unique:product_variants,sku'],
+        'variants.*.price' => ['required', 'numeric', 'min:0'],
+        'variants.*.cost_price' => ['nullable', 'numeric', 'min:0'],
+        'variants.*.stock' => ['nullable', 'integer', 'min:0'],
+        'variants.*.status' => ['nullable', 'boolean'],
+        'variants.*.attribute_value_ids' => ['nullable', 'array'],
+        'variants.*.attribute_value_ids.*' => ['exists:attribute_values,id'],
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    DB::beginTransaction();
+    try {
+        $data = $validator->validated();
+
+        // Generate SKU if not provided
+        if (empty($data['sku'])) {
+            $data['sku'] = 'PRD-' . strtoupper(Str::random(8));
+        }
+
+        // Generate slug
+        $data['slug'] = Str::slug($data['title']) . '-' . time();
+
+        // ✅ REQUIRED FIELDS (from route/auth)
+        $data['module_id']  = $moduleId;
+        $data['branch_id']  = $branchId;      // default branch
+        $data['created_by'] = Auth::id();      // must not be null
+
+        // Extract related data
+        $categoryIds  = $data['category_ids'] ?? [];
+        $vendorIds    = $data['vendor_ids'] ?? [];
+        $variantsData = $data['variants'] ?? [];
+
+        unset($data['category_ids'], $data['vendor_ids'], $data['variants']);
+
+        // Create product
+        $product = Product::create($data);
+
+        // Attach categories
+        $product->categories()->sync($categoryIds);
+
+        // Attach vendors
+        if (!empty($vendorIds)) {
+            $product->vendors()->sync($vendorIds);
+        }
+
+        // Create variants
+        foreach ($variantsData as $variantData) {
+            $attributeValueIds = $variantData['attribute_value_ids'] ?? [];
+            unset($variantData['attribute_value_ids']);
+
+            $variant = $product->variants()->create($variantData);
+
+            if (!empty($attributeValueIds)) {
+                $variant->attributeValues()->sync($attributeValueIds);
+            }
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product created successfully',
+            // ✅ DO NOT load 'branches' to avoid product_branches table
+            'data' => $product->load([
+                'categories',
+                'vendors',
+                'branch',
+                'variants.attributeValues'
+            ]),
+        ], 201);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to create product: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+
 
     /**
      * Get single product
@@ -277,15 +400,7 @@ class ProductController extends Controller
             'tax',
             'currency',
             'branch', // Default branch
-            'branches' => function ($q) {
-                $q->wherePivot('is_active', true);
-            },
-            'variants' => function ($q) use ($isMobile) {
-                if ($isMobile) {
-                    $q->where('status', true);
-                }
-                $q->with('attributeValues.attribute');
-            },
+            'vendors',
         ])->forBranch($branchId)->where('module_id', $moduleId);
 
         if ($isMobile) {

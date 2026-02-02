@@ -135,9 +135,13 @@ class Company extends BaseTenant
             }
 
             // Auto-generate database name if not set
-            if (empty($company->database)) {
-                $company->database = 'company_' . str_replace('-', '_', $company->subdomain);
-            }
+            // if (empty($company->database)) {
+            //     $company->database = 'company_' . str_replace('-', '_', $company->subdomain);
+            // }
+
+            $prefix = config('multitenancy.tenant_db_prefix', '');
+            $company->database = $prefix . 'company_' . str_replace('-', '_', $company->subdomain);
+
 
             // Set default status if not set
             if (empty($company->status)) {
@@ -286,7 +290,8 @@ class Company extends BaseTenant
         while (DB::connection('mysql')->table('companies')
             ->where('subdomain', $subdomain)
             ->whereNull('deleted_at')
-            ->exists()) {
+            ->exists()
+        ) {
             $subdomain = $originalSubdomain . '-' . $counter;
             $counter++;
         }
@@ -342,7 +347,8 @@ class Company extends BaseTenant
         while (DB::connection('mysql')->table('companies')
             ->where('slug', $slug)
             ->whereNull('deleted_at')
-            ->exists()) {
+            ->exists()
+        ) {
             $slug = $originalSlug . '-' . $counter;
             $counter++;
         }
@@ -420,8 +426,8 @@ class Company extends BaseTenant
     public function isOnTrial(): bool
     {
         return $this->plan === self::PLAN_TRIAL &&
-               $this->trial_ends_at &&
-               $this->trial_ends_at->isFuture();
+            $this->trial_ends_at &&
+            $this->trial_ends_at->isFuture();
     }
 
     /**
@@ -458,8 +464,8 @@ class Company extends BaseTenant
         }
 
         return $this->isOnTrial() ||
-               $this->isInGracePeriod() ||
-               ($this->subscription_ends_at && $this->subscription_ends_at->isFuture());
+            $this->isInGracePeriod() ||
+            ($this->subscription_ends_at && $this->subscription_ends_at->isFuture());
     }
 
     /**

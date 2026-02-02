@@ -17,50 +17,111 @@ class TargetController extends Controller
     /**
      * Get all targets for a module
      */
+    // public function index($companySlug, $moduleId, $branchId, Request $request): JsonResponse
+    // {
+    //     // Verify module exists
+    //     $module = Module::find($moduleId);
+    //     if (!$module) {
+    //         return response()->json(['success' => false, 'message' => 'Module not found'], 404);
+    //     }
+
+    //     $perPage = $request->query('per_page', 15);
+    //     $status = $request->query('status');
+    //     $userId = $request->query('user_id');
+    //     $roleName = $request->query('role_name');
+
+    //     $query = Target::with(['user', 'creator', 'module'])
+    //         ->forBranch($branchId)
+    //         ->where('module_id', $moduleId);
+
+    //     // Filter by status
+    //     if ($status) {
+    //         $query->where('status', $status);
+    //     }
+
+    //     // Filter by user
+    //     if ($userId) {
+    //         $query->where('user_id', $userId);
+    //     }
+
+    //     // Filter by role
+    //     if ($roleName) {
+    //         $query->where('role_name', $roleName);
+    //     }
+
+    //     $targets = $query->latest()->paginate($perPage);
+
+    //     // Update progress for all targets
+    //     foreach ($targets as $target) {
+    //         $target->updateProgress();
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $targets->fresh(),
+    //     ]);
+    // }
     public function index($companySlug, $moduleId, $branchId, Request $request): JsonResponse
-    {
-        // Verify module exists
-        $module = Module::find($moduleId);
-        if (!$module) {
-            return response()->json(['success' => false, 'message' => 'Module not found'], 404);
-        }
-
-        $perPage = $request->query('per_page', 15);
-        $status = $request->query('status');
-        $userId = $request->query('user_id');
-        $roleName = $request->query('role_name');
-
-        $query = Target::with(['user', 'creator', 'module'])
-            ->forBranch($branchId)
-            ->where('module_id', $moduleId);
-
-        // Filter by status
-        if ($status) {
-            $query->where('status', $status);
-        }
-
-        // Filter by user
-        if ($userId) {
-            $query->where('user_id', $userId);
-        }
-
-        // Filter by role
-        if ($roleName) {
-            $query->where('role_name', $roleName);
-        }
-
-        $targets = $query->latest()->paginate($perPage);
-
-        // Update progress for all targets
-        foreach ($targets as $target) {
-            $target->updateProgress();
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => $targets->fresh(),
-        ]);
+{
+    // Verify module exists
+    $module = Module::find($moduleId);
+    if (!$module) {
+        return response()->json(['success' => false, 'message' => 'Module not found'], 404);
     }
+
+    $perPage = (int) $request->query('per_page', 15);
+    $status = $request->query('status');
+    $userId = $request->query('user_id');
+    $roleName = $request->query('role_name');
+
+    $query = Target::with(['user', 'creator', 'module'])
+        ->forBranch($branchId)
+        ->where('module_id', $moduleId);
+
+    // Filter by status
+    if (!empty($status)) {
+        $query->where('status', $status);
+    }
+
+    // Filter by user
+    if (!empty($userId)) {
+        $query->where('user_id', $userId);
+    }
+
+    // Filter by role
+    if (!empty($roleName)) {
+        $query->where('role_name', $roleName);
+    }
+
+    $targets = $query->latest()->paginate($perPage);
+
+    // Update progress for all targets
+    foreach ($targets->items() as $target) {
+        $target->updateProgress();
+    }
+
+    // Reload targets after progress update
+    $targetIds = collect($targets->items())->pluck('id')->toArray();
+
+    $freshTargets = Target::with(['user', 'creator', 'module'])
+        ->whereIn('id', $targetIds)
+        ->latest()
+        ->get()
+        ->keyBy('id');
+
+    // Replace paginator items with fresh updated records
+    $targets->setCollection(
+        collect($targets->items())->map(function ($target) use ($freshTargets) {
+            return $freshTargets[$target->id] ?? $target;
+        })
+    );
+
+    return response()->json([
+        'success' => true,
+        'data' => $targets,
+    ]);
+}
+
 
     /**
      * Create a new target
