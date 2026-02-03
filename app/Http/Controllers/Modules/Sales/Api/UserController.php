@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Spatie\Permission\Models\Role;
+use App\Models\Modules\Sales\Role;
 
 class UserController extends Controller
 {
@@ -295,7 +295,7 @@ class UserController extends Controller
         ]);
     }
 
-  
+
 
     /**
      * Update a user

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Role;
+use App\Models\Modules\Sales\Role;
 
 /**
  * Tenant Registration Controller (FIXED VERSION)
@@ -271,7 +271,7 @@ class TenantRegistrationController extends Controller
             ?? Company::generateSubdomain($request->input('company.name'));
         $expectedDbName = 'company_' . str_replace('-', '_', $subdomain);
 
-        $existingDb = DB::select("SHOW DATABASES LIKE '{$expectedDbName}'");
+        $existingDb = DB::select('SHOW DATABASES LIKE ?', [$expectedDbName]);
         $existingCompany = Company::on('mysql')
             ->where('subdomain', $subdomain)
             ->exists();

@@ -3,7 +3,7 @@
 namespace Database\Seeders\Tenant;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
+use App\Models\Modules\Sales\Role;
 use Spatie\Permission\Models\Permission;
 
 /**

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Permission\Models\Role;
+use App\Models\Modules\Sales\Role;
 use Spatie\Permission\Models\Permission;
 use Exception;
 
