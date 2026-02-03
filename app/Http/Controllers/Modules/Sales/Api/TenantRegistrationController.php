@@ -257,6 +257,30 @@ class TenantRegistrationController extends Controller
             ], 422);
         }
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // ====================================================================
+        // ORPHAN DATABASE CLEANUP
+        // ====================================================================
+        $subdomain = $request->input('subdomain')
+            ?? Company::generateSubdomain($request->input('company.name'));
+        $expectedDbName = 'company_' . str_replace('-', '_', $subdomain);
+
+        $existingDb = DB::select("SHOW DATABASES LIKE '{$expectedDbName}'");
+        $existingCompany = Company::on('mysql')
+            ->where('subdomain', $subdomain)
+            ->exists();
+
+        if (!empty($existingDb) && !$existingCompany) {
+            DB::statement("DROP DATABASE IF EXISTS `{$expectedDbName}`");
+            Log::warning("Dropped orphan database: {$expectedDbName}");
+        }
+
         DB::beginTransaction();
 
         try {

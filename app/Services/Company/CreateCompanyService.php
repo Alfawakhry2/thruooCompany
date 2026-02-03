@@ -22,7 +22,9 @@ class CreateCompanyService
         $databaseName = $company->database;
 
         // Create database
-        DB::statement("CREATE DATABASE IF NOT EXISTS `{$databaseName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        // Drop first to ensure a clean slate, then recreate
+        DB::statement("DROP DATABASE IF EXISTS `{$databaseName}`");
+        DB::statement("CREATE DATABASE `{$databaseName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         Log::info("Created database: {$databaseName}");
     }
@@ -44,7 +46,6 @@ class CreateCompanyService
             ]);
 
             Log::info("Ran migrations for company: {$company->subdomain}");
-
         } catch (\Exception $e) {
             Log::error("Migration error for company {$company->subdomain}: " . $e->getMessage());
             throw $e;
@@ -120,7 +121,6 @@ class CreateCompanyService
             ]);
 
             Log::info("Seeded database for company: {$company->subdomain}");
-
         } catch (\Exception $e) {
             Log::error("Seeder error for company {$company->subdomain}: " . $e->getMessage());
             throw $e;
