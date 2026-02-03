@@ -466,6 +466,8 @@ class TenantRegistrationController extends Controller
             // ====================================================================
             Log::info('Assigning Admin role to owner...');
 
+            $company->makeCurrent(); // ✅ add this
+
             $adminRole = Role::where('name', 'Admin')->first();
             if ($adminRole) {
                 $adminUser->assignRole($adminRole);
@@ -571,7 +573,6 @@ class TenantRegistrationController extends Controller
                     ],
                 ],
             ], 201);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Company::forgetCurrent();
