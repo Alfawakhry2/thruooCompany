@@ -271,7 +271,7 @@ class TenantRegistrationController extends Controller
             ?? Company::generateSubdomain($request->input('company.name'));
         $expectedDbName = 'company_' . str_replace('-', '_', $subdomain);
 
-        $existingDb = DB::select('SHOW DATABASES LIKE ?', [$expectedDbName]);
+        $existingDb = DB::select("SHOW DATABASES LIKE '{$expectedDbName}'");
         $existingCompany = Company::on('mysql')
             ->where('subdomain', $subdomain)
             ->exists();
