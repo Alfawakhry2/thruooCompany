@@ -281,7 +281,8 @@ class TenantRegistrationController extends Controller
             Log::warning("Dropped orphan database: {$expectedDbName}");
         }
 
-        DB::beginTransaction();
+        // DB::beginTransaction();
+        DB::connection('mysql')->beginTransaction();
 
         try {
             // ====================================================================
@@ -559,7 +560,8 @@ class TenantRegistrationController extends Controller
             // Forget current tenant before committing
             Company::forgetCurrent();
 
-            DB::commit();
+            // DB::commit();
+            DB::connection('mysql')->commit();
 
             Log::info('Registration completed successfully');
 
@@ -598,7 +600,8 @@ class TenantRegistrationController extends Controller
                 ],
             ], 201);
         } catch (\Exception $e) {
-            DB::rollBack();
+            // DB::rollBack();
+            DB::connection('mysql')->rollBack();
             Company::forgetCurrent();
 
             Log::error('Registration error: ' . $e->getMessage());
